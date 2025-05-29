@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro - Empresa em Teste</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.4rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* Formulário */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #2980b9, #1a252f);
+            transform: translateY(-2px);
+        }
+
+        /* Mapa */
+        .mapa-container {
+            height: 450px;
+            position: relative;
+        }
+
+        #mapa {
+            height: 100%;
+            width: 100%;
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        /* Legenda */
+        .legenda {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .legenda h4 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .legenda-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 3px;
+        }
+
+        /* Gráficos */
+        .graficos-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .graficos-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            height: 300px;
+        }
+
+        /* Tabela */
+        .tabela-container {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .mapa-container { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dashboard Financeiro - Brasil</h1>
+            <p>Controle de gastos e despesas por estado</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2>Registrar Novo Gasto</h2>
+                <form id="gastoForm">
+                    <div class="form-group">
+                        <label for="estado">Estado:</label>
+                        <select id="estado" required>
+                            <option value="">Selecione...</option>
+                            <!-- Estados serão preenchidos por JS -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="valor">Valor (R$):</label>
+                        <input type="number" id="valor" step="0.01" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categoria">Categoria:</label>
+                        <select id="categoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="Salário">Salário</option>
+                            <option value="Vale Alimentação">Vale Alimentação</option>
+                            <option value="Vale Transporte">Vale Transporte</option>
+                            <option value="Férias">Férias</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="data">Data:</label>
+                        <input type="date" id="data" required>
+                    </div>
+                    
+                    <button type="submit">Registrar Gasto</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Resumo Financeiro</h2>
+                <div id="resumo">
+                    <p>Total gasto: <span id="totalGasto">R$ 0,00</span></p>
+                    <p>Estado com maior gasto: <span id="maiorGasto">-</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mapa-container">
+            <h2>Mapa de Gastos por Estado</h2>
+            <div id="mapa"></div>
+            <div class="legenda">
+                <h4>Legenda (R$)</h4>
+                <div class="legenda-item">
+                    <div class="legenda-color" style="background-color: #800026;"></div>
+                    <span>> 1.000.000</span>
+                </div>
+                <div class="legenda-item">
+                    <div class="legenda-color" style="background-color: #BD0026;"></div>
+                    <span>500.000 - 1.000.000</span>
+                </div>
+                <div class="legenda-item">
+                    <div class="legenda-color" style="background-color: #E31A1C;"></div>
+                    <span>100.000 - 500.000</span>
+                </div>
+                <div class="legenda-item">
+                    <div class="legenda-color" style="background-color: #FC4E2A;"></div>
+                    <span>50.000 - 100.000</span>
+                </div>
+                <div class="legenda-item">
+                    <div class="legenda-color" style="background-color: #FD8D3C;"></div>
+                    <span>10.000 - 50.000</span>
+                </div>
+                <div class="legenda-item">
+                    <div class="legenda-color" style="background-color: #FFEDA0;"></div>
+                    <span>< 10.000</span>
+                </div>
+                <div class="legenda-item">
+                    <div class="legenda-color" style="background-color: #CCCCCC;"></div>
+                    <span>Sem dados</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="graficos-container">
+            <div class="chart-container">
+                <canvas id="graficoBarras"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="graficoPizza"></canvas>
+            </div>
+        </div>
+
+        <div class="card tabela-container">
+            <h2>Histórico de Gastos</h2>
+            <table id="tabelaGastos">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Valor</th>
+                        <th>Categoria</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dados serão preenchidos por JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Dados iniciais
+        let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+        let mapa;
+        let geoJsonLayer;
+        let graficoBarras, graficoPizza;
+
+        // Estados brasileiros
+        const estados = [
+            { sigla: 'AC', nome: 'Acre' },
+            { sigla: 'AL', nome: 'Alagoas' },
+            { sigla: 'AP', nome: 'Amapá' },
+            { sigla: 'AM', nome: 'Amazonas' },
+            { sigla: 'BA', nome: 'Bahia' },
+            { sigla: 'CE', nome: 'Ceará' },
+            { sigla: 'DF', nome: 'Distrito Federal' },
+            { sigla: 'ES', nome: 'Espírito Santo' },
+            { sigla: 'GO', nome: 'Goiás' },
+            { sigla: 'MA', nome: 'Maranhão' },
+            { sigla: 'MT', nome: 'Mato Grosso' },
+            { sigla: 'MS', nome: 'Mato Grosso do Sul' },
+            { sigla: 'MG', nome: 'Minas Gerais' },
+            { sigla: 'PA', nome: 'Pará' },
+            { sigla: 'PB', nome: 'Paraíba' },
+            { sigla: 'PR', nome: 'Paraná' },
+            { sigla: 'PE', nome: 'Pernambuco' },
+            { sigla: 'PI', nome: 'Piauí' },
+            { sigla: 'RJ', nome: 'Rio de Janeiro' },
+            { sigla: 'RN', nome: 'Rio Grande do Norte' },
+            { sigla: 'RS', nome: 'Rio Grande do Sul' },
+            { sigla: 'RO', nome: 'Rondônia' },
+            { sigla: 'RR', nome: 'Roraima' },
+            { sigla: 'SC', nome: 'Santa Catarina' },
+            { sigla: 'SP', nome: 'São Paulo' },
+            { sigla: 'SE', nome: 'Sergipe' },
+            { sigla: 'TO', nome: 'Tocantins' }
+        ];
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            preencherEstados();
+            inicializarMapa();
+            carregarGeoJSON().then(() => {
+                atualizarTabela();
+                atualizarMapa();
+                atualizarGraficos();
+                atualizarResumo();
+            });
+            configurarFormulario();
+        });
+
+        // Carregar GeoJSON do Brasil
+        async function carregarGeoJSON() {
+            // GeoJSON simplificado do Brasil
+            const brasilGeoJSON = {
+                "type": "FeatureCollection",
+                "features": estados.map(estado => ({
+                    "type": "Feature",
+                    "properties": {
+                        "sigla": estado.sigla,
+                        "nome": estado.nome
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [gerarCoordenadasAleatorias(estado.sigla)]
+                    }
+                }))
+            };
+            return brasilGeoJSON;
+        }
+
+        // Função auxiliar para gerar coordenadas fictícias (em um projeto real, use um GeoJSON completo)
+        function gerarCoordenadasAleatorias(sigla) {
+            // Coordenadas aproximadas para cada estado (simplificado)
+            const centroides = {
+                'AC': [-8.77, -70.55], 'AL': [-9.71, -35.73], 'AP': [1.41, -51.77],
+                'AM': [-3.47, -65.10], 'BA': [-12.96, -38.51], 'CE': [-3.71, -38.54],
+                'DF': [-15.78, -47.93], 'ES': [-19.19, -40.34], 'GO': [-16.64, -49.31],
+                'MA': [-2.55, -44.30], 'MT': [-12.64, -55.42], 'MS': [-20.51, -54.54],
+                'MG': [-18.10, -44.38], 'PA': [-5.53, -52.29], 'PB': [-7.06, -35.55],
+                'PR': [-24.89, -51.55], 'PE': [-8.28, -35.07], 'PI': [-8.28, -43.68],
+                'RJ': [-22.25, -42.66], 'RN': [-5.81, -36.59], 'RS': [-30.01, -51.22],
+                'RO': [-11.22, -62.80], 'RR': [1.99, -61.33], 'SC': [-27.45, -50.95],
+                'SP': [-22.19, -48.79], 'SE': [-10.57, -37.45], 'TO': [-10.25, -48.25]
+            };
+
+            const [lat, lng] = centroides[sigla];
+            const variacao = 2; // Graus de variação para criar um polígono simples
+            
+            return [
+                [lng - variacao, lat - variacao],
+                [lng + variacao, lat - variacao],
+                [lng + variacao, lat + variacao],
+                [lng - variacao, lat + variacao],
+                [lng - variacao, lat - variacao]
+            ];
+        }
+
+        // Preencher dropdown de estados
+        function preencherEstados() {
+            const selectEstado = document.getElementById('estado');
+            estados.forEach(estado => {
+                const option = document.createElement('option');
+                option.value = estado.sigla;
+                option.textContent = estado.nome;
+                selectEstado.appendChild(option);
+            });
+        }
+
+        // Configurar formulário
+        function configurarFormulario() {
+            const form = document.getElementById('gastoForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const estado = document.getElementById('estado').value;
+                const valor = parseFloat(document.getElementById('valor').value);
+                const categoria = document.getElementById('categoria').value;
+                const data = document.getElementById('data').value;
+                
+                const novoGasto = {
+                    id: Date.now(),
+                    estado,
+                    valor,
+                    categoria,
+                    data
+                };
+                
+                gastos.push(novoGasto);
+                salvarDados();
+                atualizarTabela();
+                atualizarMapa();
+                atualizarGraficos();
+                atualizarResumo();
+                
+                // Feedback visual
+                const button = form.querySelector('button');
+                button.textContent = 'Registrado!';
+                button.style.backgroundColor = '#2ecc71';
+                setTimeout(() => {
+                    button.textContent = 'Registrar Gasto';
+                    button.style.backgroundColor = '';
+                    form.reset();
+                }, 1500);
+            });
+        }
+
+        // Salvar dados no localStorage
+        function salvarDados() {
+            localStorage.setItem('gastos', JSON.stringify(gastos));
+        }
+
+        // Atualizar tabela
+        function atualizarTabela() {
+            const tbody = document.querySelector('#tabelaGastos tbody');
+            tbody.innerHTML = '';
+            
+            if (gastos.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="5" style="text-align: center;">Nenhum gasto registrado</td>';
+                tbody.appendChild(tr);
+                return;
+            }
+            
+            gastos.forEach(gasto => {
+                const tr = document.createElement('tr');
+                const estadoNome = estados.find(e => e.sigla === gasto.estado)?.nome || gasto.estado;
+                
+                tr.innerHTML = `
+                    <td>${estadoNome}</td>
+                    <td>R$ ${formatarValor(gasto.valor)}</td>
+                    <td>${gasto.categoria}</td>
+                    <td>${new Date(gasto.data).toLocaleDateString('pt-BR')}</td>
+                    <td>
+                        <button class="btn-excluir" data-id="${gasto.id}">Excluir</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            // Configurar eventos de exclusão
+            document.querySelectorAll('.btn-excluir').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    gastos = gastos.filter(g => g.id !== id);
+                    salvarDados();
+                    atualizarTabela();
+                    atualizarMapa();
+                    atualizarGraficos();
+                    atualizarResumo();
+                });
+            });
+        }
+
+        function formatarValor(valor) {
+            return valor.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+\,)/g, '$1.');
+        }
+
+        // Mapa do Brasil
+        function inicializarMapa() {
+            mapa = L.map('mapa').setView([-15, -55], 4);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(mapa);
+        }
+
+        async function atualizarMapa() {
+            const geojsonData = await carregarGeoJSON();
+            
+            // Remove a camada anterior se existir
+            if (geoJsonLayer) {
+                mapa.removeLayer(geoJsonLayer);
+            }
+            
+            // Calcula totais por estado
+            const gastosPorEstado = calcularTotaisPorEstado();
+            
+            // Adiciona nova camada com interatividade
+            geoJsonLayer = L.geoJSON(geojsonData, {
+                style: function(feature) {
+                    const sigla = feature.properties.sigla;
+                    const total = gastosPorEstado[sigla] || 0;
+                    
+                    return {
+                        fillColor: getCorPorValor(total),
+                        weight: 1,
+                        opacity: 1,
+                        color: 'white',
+                        fillOpacity: 0.7
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    const sigla = feature.properties.sigla;
+                    const nome = feature.properties.nome;
+                    const total = gastosPorEstado[sigla] || 0;
+                    
+                    // Tooltip dinâmico
+                    layer.bindTooltip(`<b>${nome}</b><br>Total: R$ ${formatarValor(total)}`, {
+                        permanent: false,
+                        direction: 'auto'
+                    });
+                    
+                    // Popup com detalhes
+                    layer.bindPopup(criarPopupContent(sigla, nome));
+                    
+                    // Efeitos de hover
+                    layer.on({
+                        mouseover: function(e) {
+                            const layer = e.target;
+                            layer.setStyle({
+                                weight: 3,
+                                color: '#666',
+                                fillOpacity: 0.9
+                            });
+                            layer.bringToFront();
+                        },
+                        mouseout: function(e) {
+                            geoJsonLayer.resetStyle(e.target);
+                        },
+                        click: function(e) {
+                            mapa.fitBounds(e.target.getBounds());
+                        }
+                    });
+                }
+            }).addTo(mapa);
+        }
+
+        function criarPopupContent(sigla, nome) {
+            const gastosEstado = gastos.filter(g => g.estado === sigla);
+            let content = `<h3>${nome}</h3>`;
+            
+            if (gastosEstado.length === 0) {
+                content += '<p>Nenhum gasto registrado</p>';
+            } else {
+                // Agrupar por categoria
+                const gastosPorCategoria = {};
+                gastosEstado.forEach(gasto => {
+                    if (!gastosPorCategoria[gasto.categoria]) {
+                        gastosPorCategoria[gasto.categoria] = 0;
+                    }
+                    gastosPorCategoria[gasto.categoria] += gasto.valor;
+                });
+                
+                const total = gastosEstado.reduce((sum, g) => sum + g.valor, 0);
+                content += `<p><strong>Total:</strong> R$ ${formatarValor(total)}</p>`;
+                
+                content += '<h4>Gastos por Categoria</h4>';
+                content += '<table class="popup-table"><tr><th>Categoria</th><th>Valor</th></tr>';
+                
+                for (const [categoria, valor] of Object.entries(gastosPorCategoria)) {
+                    content += `<tr>
+                        <td>${categoria}</td>
+                        <td>R$ ${formatarValor(valor)}</td>
+                    </tr>`;
+                }
+                
+                content += '</table>';
+            }
+            
+            return content;
+        }
+
+        function calcularTotaisPorEstado() {
+            const gastosPorEstado = {};
+            
+            // Inicializa todos os estados com 0
+            estados.forEach(estado => {
+                gastosPorEstado[estado.sigla] = 0;
+            });
+            
+            // Soma os valores
+            gastos.forEach(gasto => {
+                if (gastosPorEstado.hasOwnProperty(gasto.estado)) {
+                    gastosPorEstado[gasto.estado] += gasto.valor;
+                }
+            });
+            
+            return gastosPorEstado;
+        }
+
+        function getCorPorValor(valor) {
+            return valor === 0 ? '#CCCCCC' :
+                   valor > 1000000 ? '#800026' :
+                   valor > 500000  ? '#BD0026' :
+                   valor > 100000  ? '#E31A1C' :
+                   valor > 50000   ? '#FC4E2A' :
+                   valor > 10000   ? '#FD8D3C' :
+                                     '#FFEDA0';
+        }
+
+        // Gráficos
+        function atualizarGraficos() {
+            atualizarGraficoBarras();
+            atualizarGraficoPizza();
+        }
+
+        function atualizarGraficoBarras() {
+            const ctx = document.getElementById('graficoBarras').getContext('2d');
+            
+            // Agrupar gastos por estado e categoria
+            const gastosPorEstadoCategoria = {};
+            
+            estados.forEach(estado => {
+                gastosPorEstadoCategoria[estado.sigla] = {
+                    'Salário': 0,
+                    'Vale Alimentação': 0,
+                    'Vale Transporte': 0,
+                    'Férias': 0,
+                    'Outros': 0,
+                    total: 0
+                };
+            });
+            
+            gastos.forEach(gasto => {
+                const estado = gasto.estado;
+                const categoria = gasto.categoria;
+                
+                if (gastosPorEstadoCategoria[estado]) {
+                    if (gastosPorEstadoCategoria[estado][categoria] !== undefined) {
+                        gastosPorEstadoCategoria[estado][categoria] += gasto.valor;
+                    } else {
+                        gastosPorEstadoCategoria[estado]['Outros'] += gasto.valor;
+                    }
+                    gastosPorEstadoCategoria[estado].total += gasto.valor;
+                }
+            });
+            
+            // Filtrar apenas estados com gastos
+            const estadosComGastos = estados.filter(estado => 
+                gastosPorEstadoCategoria[estado.sigla].total > 0
+            );
+            
+            const labels = estadosComGastos.map(estado => estado.nome);
+            
+            // Preparar datasets para cada categoria
+            const categorias = ['Salário', 'Vale Alimentação', 'Vale Transporte', 'Férias', 'Outros'];
+            const cores = ['#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6'];
+            
+            const datasets = categorias.map((categoria, index) => {
+                return {
+                    label: categoria,
+                    data: estadosComGastos.map(estado => 
+                        gastosPorEstadoCategoria[estado.sigla][categoria]
+                    ),
+                    backgroundColor: cores[index],
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                    borderWidth: 1
+                };
+            });
+            
+            // Adicionar dataset para o total
+            datasets.push({
+                label: 'Total',
+                data: estadosComGastos.map(estado => 
+                    gastosPorEstadoCategoria[estado.sigla].total
+                ),
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                borderColor: '#2c3e50',
+                borderWidth: 2,
+                type: 'line',
+                fill: false
+            });
+            
+            // Destruir gráfico anterior se existir
+            if (graficoBarras) {
+                graficoBarras.destroy();
+            }
+            
+            graficoBarras = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + formatarValor(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: R$ ${formatarValor(value)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function atualizarGraficoPizza() {
+            const ctx = document.getElementById('graficoPizza').getContext('2d');
+            
+            // Agrupar gastos por categoria
+            const gastosPorCategoria = {
+                'Salário': 0,
+                'Vale Alimentação': 0,
+                'Vale Transporte': 0,
+                'Férias': 0,
+                'Outros': 0
+            };
+            
+            gastos.forEach(gasto => {
+                if (gastosPorCategoria.hasOwnProperty(gasto.categoria)) {
+                    gastosPorCategoria[gasto.categoria] += gasto.valor;
+                } else {
+                    gastosPorCategoria['Outros'] += gasto.valor;
+                }
+            });
+            
+            const labels = Object.keys(gastosPorCategoria);
+            const dados = Object.values(gastosPorCategoria);
+            const cores = ['#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6'];
+            
+            // Destruir gráfico anterior se existir
+            if (graficoPizza) {
+                graficoPizza.destroy();
+            }
+            
+            graficoPizza = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dados,
+                        backgroundColor: cores,
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: R$ ${formatarValor(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Atualizar resumo
+        function atualizarResumo() {
+            if (gastos.length === 0) {
+                document.getElementById('totalGasto').textContent = 'R$ 0,00';
+                document.getElementById('maiorGasto').textContent = '-';
+                return;
+            }
+            
+            // Total gasto
+            const total = gastos.reduce((sum, g) => sum + g.valor, 0);
+            document.getElementById('totalGasto').textContent = 'R$ ' + formatarValor(total);
+            
+            // Estado com maior gasto
+            const gastosPorEstado = calcularTotaisPorEstado();
+            let maiorEstado = null;
+            let maiorValor = 0;
+            
+            for (const [sigla, valor] of Object.entries(gastosPorEstado)) {
+                if (valor > maiorValor) {
+                    maiorValor = valor;
+                    maiorEstado = estados.find(e => e.sigla === sigla)?.nome || sigla;
+                }
+            }
+            
+            document.getElementById('maiorGasto').textContent = `${maiorEstado} (R$ ${formatarValor(maiorValor)})`;
+        }
+    </script>
+</body>
+</html>
