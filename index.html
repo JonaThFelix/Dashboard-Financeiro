@@ -7,7 +7,25 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #1abc9c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --gray-color: #95a5a6;
+            --white-color: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -16,13 +34,13 @@
         }
 
         body {
-            background-color: #f0f2f5;
+            background-color: #f5f7fa;
             color: #333;
             line-height: 1.6;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -30,50 +48,92 @@
         header {
             text-align: center;
             margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: var(--white-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+            pointer-events: none;
         }
 
         header h1 {
             font-size: 2.2rem;
             margin-bottom: 10px;
+            position: relative;
         }
 
-        .dashboard {
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: repeat(12, 1fr);
             gap: 20px;
             margin-bottom: 30px;
         }
 
-        @media (max-width: 768px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: var(--white-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
             padding: 20px;
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
         }
 
         .card h2 {
             margin-bottom: 15px;
-            color: #2c3e50;
+            color: var(--secondary-color);
             font-size: 1.4rem;
             border-bottom: 2px solid #eee;
             padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card h2 i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+
+        /* Layout responsivo */
+        .col-12 { grid-column: span 12; }
+        .col-8 { grid-column: span 8; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+        .col-3 { grid-column: span 3; }
+
+        @media (max-width: 1200px) {
+            .col-8 { grid-column: span 12; }
+            .col-6 { grid-column: span 12; }
+            .col-4 { grid-column: span 6; }
+            .col-3 { grid-column: span 6; }
+        }
+
+        @media (max-width: 768px) {
+            .col-4, .col-3 { grid-column: span 12; }
         }
 
         /* Formulário */
@@ -85,36 +145,45 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--secondary-color);
         }
 
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: var(--border-radius);
             font-size: 1rem;
-            transition: border 0.3s;
+            transition: var(--transition);
+            background-color: var(--white-color);
         }
 
         .form-group input:focus,
         .form-group select:focus {
-            border-color: #3498db;
+            border-color: var(--primary-color);
             outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
         }
 
         button {
-            background: linear-gradient(135deg, #3498db, #2c3e50);
-            color: white;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--white-color);
             border: none;
             padding: 12px 20px;
-            border-radius: 5px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             font-size: 1rem;
-            transition: all 0.3s;
+            transition: var(--transition);
             width: 100%;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button i {
+            margin-right: 8px;
         }
 
         button:hover {
@@ -124,14 +193,17 @@
 
         /* Mapa */
         .mapa-container {
-            height: 450px;
+            height: 500px;
+            width: 100%;
             position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
         }
 
         #mapa {
             height: 100%;
             width: 100%;
-            border-radius: 10px;
+            border-radius: var(--border-radius);
             z-index: 1;
         }
 
@@ -141,16 +213,16 @@
             bottom: 20px;
             right: 20px;
             z-index: 1000;
-            background: white;
+            background: var(--white-color);
             padding: 10px 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
             font-size: 0.9rem;
         }
 
         .legenda h4 {
             margin-bottom: 8px;
-            color: #2c3e50;
+            color: var(--secondary-color);
         }
 
         .legenda-item {
@@ -169,38 +241,40 @@
         /* Gráficos */
         .graficos-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
 
-        @media (max-width: 768px) {
-            .graficos-container {
-                grid-template-columns: 1fr;
-            }
+        .chart-container {
+            background: var(--white-color);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--shadow);
+            height: 350px;
+            position: relative;
         }
 
-        .chart-container {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            height: 300px;
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
         }
 
         /* Tabela */
         .tabela-container {
             margin-top: 30px;
             overflow-x: auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            background: var(--white-color);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
+            margin-top: 0;
+            box-shadow: none;
+            border-radius: 0;
         }
 
         th, td {
@@ -210,9 +284,11 @@
         }
 
         th {
-            background-color: #3498db;
-            color: white;
+            background-color: var(--primary-color);
+            color: var(--white-color);
             font-weight: 600;
+            position: sticky;
+            top: 0;
         }
 
         tr:nth-child(even) {
@@ -222,6 +298,73 @@
         tr:hover {
             background-color: #f1f1f1;
         }
+
+        .btn-excluir {
+            background: var(--danger-color);
+            color: var(--white-color);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-excluir:hover {
+            background: #c0392b;
+            transform: none;
+        }
+
+        /* Cards de resumo */
+        .summary-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            color: var(--white-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+            pointer-events: none;
+        }
+
+        .summary-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .summary-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .summary-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .card-primary { background: linear-gradient(135deg, var(--primary-color), #2980b9); }
+        .card-success { background: linear-gradient(135deg, var(--success-color), #27ae60); }
+        .card-warning { background: linear-gradient(135deg, var(--warning-color), #d35400); }
+        .card-danger { background: linear-gradient(135deg, var(--danger-color), #c0392b); }
+        .card-info { background: linear-gradient(135deg, var(--info-color), #16a085); }
 
         /* Animações */
         @keyframes fadeIn {
@@ -235,19 +378,118 @@
 
         .card:nth-child(1) { animation-delay: 0.1s; }
         .card:nth-child(2) { animation-delay: 0.2s; }
-        .mapa-container { animation-delay: 0.3s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        .mapa-container { animation-delay: 0.5s; }
+
+        /* Abas */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .tab:hover:not(.active) {
+            border-bottom-color: #ddd;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Tooltip personalizado */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark-color);
+            color: var(--white-color);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Dashboard Financeiro - Brasil</h1>
-            <p>Controle de gastos e despesas por estado</p>
+            <h1><i class="fas fa-chart-line"></i> Dashboard Financeiro - Brasil</h1>
+            <p>Análise de gastos e despesas por estado - Visão consolidada</p>
         </header>
 
-        <div class="dashboard">
-            <div class="card">
-                <h2>Registrar Novo Gasto</h2>
+        <div class="dashboard-grid">
+            <!-- Cards de resumo -->
+            <div class="card col-3">
+                <div class="summary-card card-primary">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <h3>Total Gastos</h3>
+                    <div class="value" id="totalGasto">R$ 0,00</div>
+                </div>
+            </div>
+
+            <div class="card col-3">
+                <div class="summary-card card-success">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h3>Estado com Maior Gasto</h3>
+                    <div class="value" id="maiorGasto">-</div>
+                </div>
+            </div>
+
+            <div class="card col-3">
+                <div class="summary-card card-warning">
+                    <i class="fas fa-tags"></i>
+                    <h3>Categoria Principal</h3>
+                    <div class="value" id="categoriaPrincipal">-</div>
+                </div>
+            </div>
+
+            <div class="card col-3">
+                <div class="summary-card card-info">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Período</h3>
+                    <div class="value" id="periodo">-</div>
+                </div>
+            </div>
+
+            <!-- Formulário -->
+            <div class="card col-4">
+                <h2><i class="fas fa-plus-circle"></i> Registrar Novo Gasto</h2>
                 <form id="gastoForm">
                     <div class="form-group">
                         <label for="estado">Estado:</label>
@@ -279,54 +521,118 @@
                         <input type="date" id="data" required>
                     </div>
                     
-                    <button type="submit">Registrar Gasto</button>
+                    <button type="submit"><i class="fas fa-save"></i> Registrar Gasto</button>
                 </form>
             </div>
 
-            <div class="card">
-                <h2>Resumo Financeiro</h2>
-                <div id="resumo">
-                    <p>Total gasto: <span id="totalGasto">R$ 0,00</span></p>
-                    <p>Estado com maior gasto: <span id="maiorGasto">-</span></p>
+            <!-- Mapa -->
+            <div class="card col-8">
+                <h2><i class="fas fa-map-marked-alt"></i> Mapa de Gastos por Estado</h2>
+                <div class="mapa-container">
+                    <div id="mapa"></div>
+                    <div class="legenda">
+                        <h4>Mapa Brasil</h4>
+                        <!--<div class="legenda-item">
+                            <div class="legenda-color" style="background-color: #FFEDA0;"></div>
+                            <span>Até 10.000</span>
+                        </div>
+                        <div class="legenda-item">
+                            <div class="legenda-color" style="background-color: #FD8D3C;"></div>
+                            <span>10.001 - 50.000</span>
+                        </div>
+                        <div class="legenda-item">
+                            <div class="legenda-color" style="background-color: #FC4E2A;"></div>
+                            <span>50.001 - 100.000</span>
+                        </div>
+                        <div class="legenda-item">
+                            <div class="legenda-color" style="background-color: #E31A1C;"></div>
+                            <span>100.001 - 500.000</span>
+                        </div>
+                        <div class="legenda-item">
+                            <div class="legenda-color" style="background-color: #BD0026;"></div>
+                            <span>500.001 - 1.000.000</span>
+                        </div>
+                        <div class="legenda-item">
+                            <div class="legenda-color" style="background-color: #800026;"></div>
+                            <span>Acima de 1.000.000</span>-->
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card mapa-container">
-            <h2>Mapa de Gastos por Estado</h2>
-            <div id="mapa"></div>
+            <!-- Gráficos -->
+            <div class="card col-12">
+                <h2><i class="fas fa-chart-pie"></i> Visualizações Analíticas</h2>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="graficos-principais">Principais</div>
+                    <div class="tab" data-tab="graficos-secundarios">Secundários</div>
+                    <div class="tab" data-tab="graficos-temporais">Temporais</div>
+                </div>
+                
+                <div class="tab-content active" id="graficos-principais">
+                    <div class="graficos-container">
+                        <!-- Gráfico de Barras -->
+                        <div class="chart-container">
+                            <canvas id="graficoBarras"></canvas>
+                        </div>
+
+                        <!-- Gráfico de Pizza -->
+                        <div class="chart-container">
+                            <canvas id="graficoPizza"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="graficos-secundarios">
+                    <div class="graficos-container">
+                        <!-- Gráfico de Rosca -->
+                        <div class="chart-container">
+                            <canvas id="graficoRosca"></canvas>
+                        </div>
+
+                        <!-- Gráfico de Polar -->
+                        <div class="chart-container">
+                            <canvas id="graficoPolar"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="graficos-temporais">
+                    <div class="graficos-container">
+                        <!-- Gráfico de Linha -->
+                        <div class="chart-container">
+                            <canvas id="graficoLinha"></canvas>
+                        </div>
+
+                        <!-- Gráfico de Área -->
+                        <div class="chart-container">
+                            <canvas id="graficoArea"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
-</br></br></br>
 
-        <!--Grafico de barras-->
-        <div class="graficos-container">
-            <div class="chart-container">
-                <canvas id="graficoBarras"></canvas>
+            <!-- Tabela -->
+            <div class="card col-12">
+                <h2><i class="fas fa-table"></i> Histórico de Gastos</h2>
+                <div class="tabela-container">
+                    <table id="tabelaGastos">
+                        <thead>
+                            <tr>
+                                <th>Estado</th>
+                                <th>Valor</th>
+                                <th>Categoria</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dados serão preenchidos por JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
-            <!--Grafico de Pizza-->
-            <div class="chart-container">
-                <canvas id="graficoPizza"></canvas>
-            </div>
-        </div>
-
-        <div class="card tabela-container">
-            <h2>Histórico de Gastos</h2>
-            <table id="tabelaGastos">
-                <thead>
-                    <tr>
-                        <th>Estado</th>
-                        <th>Valor</th>
-                        <th>Categoria</th>
-                        <th>Data</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Dados serão preenchidos por JS -->
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -335,7 +641,7 @@
         let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
         let mapa;
         let geoJsonLayer;
-        let graficoBarras, graficoPizza;
+        let graficoBarras, graficoPizza, graficoRosca, graficoPolar, graficoLinha, graficoArea;
 
         // Estados brasileiros
         const estados = [
@@ -372,14 +678,35 @@
         document.addEventListener('DOMContentLoaded', function() {
             preencherEstados();
             inicializarMapa();
+            configurarTabs();
             carregarGeoJSON().then(() => {
                 atualizarTabela();
                 atualizarMapa();
-                atualizarGraficos();
+                atualizarTodosGraficos();
                 atualizarResumo();
             });
             configurarFormulario();
+            
+            // Definir data padrão para hoje
+            document.getElementById('data').valueAsDate = new Date();
         });
+
+        // Configurar abas
+        function configurarTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remover classe active de todas as tabs e conteúdos
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Adicionar classe active à tab clicada e ao conteúdo correspondente
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
 
         // Carregar GeoJSON do Brasil
         async function carregarGeoJSON() {
@@ -462,17 +789,20 @@
                 salvarDados();
                 atualizarTabela();
                 atualizarMapa();
-                atualizarGraficos();
+                atualizarTodosGraficos();
                 atualizarResumo();
                 
                 // Feedback visual
                 const button = form.querySelector('button');
-                button.textContent = 'Registrado!';
-                button.style.backgroundColor = '#2ecc71';
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Registrado!';
+                button.style.background = 'linear-gradient(135deg, var(--success-color), #27ae60)';
+                
                 setTimeout(() => {
-                    button.textContent = 'Registrar Gasto';
-                    button.style.backgroundColor = '';
+                    button.innerHTML = originalText;
+                    button.style.background = '';
                     form.reset();
+                    document.getElementById('data').valueAsDate = new Date();
                 }, 1500);
             });
         }
@@ -494,7 +824,10 @@
                 return;
             }
             
-            gastos.forEach(gasto => {
+            // Ordenar por data (mais recente primeiro)
+            const gastosOrdenados = [...gastos].sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            gastosOrdenados.forEach(gasto => {
                 const tr = document.createElement('tr');
                 const estadoNome = estados.find(e => e.sigla === gasto.estado)?.nome || gasto.estado;
                 
@@ -504,7 +837,7 @@
                     <td>${gasto.categoria}</td>
                     <td>${new Date(gasto.data).toLocaleDateString('pt-BR')}</td>
                     <td>
-                        <button class="btn-excluir" data-id="${gasto.id}">Excluir</button>
+                        <button class="btn-excluir" data-id="${gasto.id}"><i class="fas fa-trash-alt"></i> Excluir</button>
                     </td>
                 `;
                 
@@ -519,7 +852,7 @@
                     salvarDados();
                     atualizarTabela();
                     atualizarMapa();
-                    atualizarGraficos();
+                    atualizarTodosGraficos();
                     atualizarResumo();
                 });
             });
@@ -662,12 +995,17 @@
                                      '#FFEDA0';
         }
 
-        // Gráficos
-        function atualizarGraficos() {
+        // Atualizar todos os gráficos
+        function atualizarTodosGraficos() {
             atualizarGraficoBarras();
             atualizarGraficoPizza();
+            atualizarGraficoRosca();
+            atualizarGraficoPolar();
+            atualizarGraficoLinha();
+            atualizarGraficoArea();
         }
 
+        // Gráfico de Barras
         function atualizarGraficoBarras() {
             const ctx = document.getElementById('graficoBarras').getContext('2d');
             
@@ -768,12 +1106,16 @@
                                     return `${label}: R$ ${formatarValor(value)}`;
                                 }
                             }
+                        },
+                        legend: {
+                            position: 'bottom',
                         }
                     }
                 }
             });
         }
 
+        // Gráfico de Pizza
         function atualizarGraficoPizza() {
             const ctx = document.getElementById('graficoPizza').getContext('2d');
             
@@ -828,6 +1170,325 @@
                                     return `${label}: R$ ${formatarValor(value)} (${percentage}%)`;
                                 }
                             }
+                        },
+                        legend: {
+                            position: 'bottom',
+                        },
+                        datalabels: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // Gráfico de Rosca
+        function atualizarGraficoRosca() {
+            const ctx = document.getElementById('graficoRosca').getContext('2d');
+            
+            // Agrupar gastos por estado
+            const gastosPorEstado = calcularTotaisPorEstado();
+            
+            // Filtrar apenas estados com gastos
+            const estadosComGastos = estados.filter(estado => 
+                gastosPorEstado[estado.sigla] > 0
+            );
+            
+            const labels = estadosComGastos.map(estado => estado.nome);
+            const dados = estadosComGastos.map(estado => gastosPorEstado[estado.sigla]);
+            
+            // Gerar cores dinamicamente
+            const cores = estadosComGastos.map((_, index) => {
+                const hue = (index * 137.508) % 360; // Distribuição uniforme de cores
+                return `hsl(${hue}, 70%, 60%)`;
+            });
+            
+            // Destruir gráfico anterior se existir
+            if (graficoRosca) {
+                graficoRosca.destroy();
+            }
+            
+            graficoRosca = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dados,
+                        backgroundColor: cores,
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: R$ ${formatarValor(value)} (${percentage}%)`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico Polar
+        function atualizarGraficoPolar() {
+            const ctx = document.getElementById('graficoPolar').getContext('2d');
+            
+            // Agrupar gastos por categoria
+            const gastosPorCategoria = {
+                'Salário': 0,
+                'Vale Alimentação': 0,
+                'Vale Transporte': 0,
+                'Férias': 0,
+                'Outros': 0
+            };
+            
+            gastos.forEach(gasto => {
+                if (gastosPorCategoria.hasOwnProperty(gasto.categoria)) {
+                    gastosPorCategoria[gasto.categoria] += gasto.valor;
+                } else {
+                    gastosPorCategoria['Outros'] += gasto.valor;
+                }
+            });
+            
+            const labels = Object.keys(gastosPorCategoria);
+            const dados = Object.values(gastosPorCategoria);
+            const cores = ['#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6'];
+            
+            // Destruir gráfico anterior se existir
+            if (graficoPolar) {
+                graficoPolar.destroy();
+            }
+            
+            graficoPolar = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dados,
+                        backgroundColor: cores,
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: R$ ${formatarValor(value)} (${percentage}%)`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Linha (temporal)
+        function atualizarGraficoLinha() {
+            const ctx = document.getElementById('graficoLinha').getContext('2d');
+            
+            // Agrupar gastos por mês e categoria
+            const gastosPorMesCategoria = {};
+            const meses = [];
+            
+            // Inicializar estrutura
+            gastos.forEach(gasto => {
+                const date = new Date(gasto.data);
+                const mesAno = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!meses.includes(mesAno)) {
+                    meses.push(mesAno);
+                }
+                
+                if (!gastosPorMesCategoria[mesAno]) {
+                    gastosPorMesCategoria[mesAno] = {
+                        'Salário': 0,
+                        'Vale Alimentação': 0,
+                        'Vale Transporte': 0,
+                        'Férias': 0,
+                        'Outros': 0
+                    };
+                }
+                
+                if (gastosPorMesCategoria[mesAno].hasOwnProperty(gasto.categoria)) {
+                    gastosPorMesCategoria[mesAno][gasto.categoria] += gasto.valor;
+                } else {
+                    gastosPorMesCategoria[mesAno]['Outros'] += gasto.valor;
+                }
+            });
+            
+            // Ordenar meses
+            meses.sort();
+            
+            // Preparar datasets para cada categoria
+            const categorias = ['Salário', 'Vale Alimentação', 'Vale Transporte', 'Férias', 'Outros'];
+            const cores = ['#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6'];
+            
+            const datasets = categorias.map((categoria, index) => {
+                return {
+                    label: categoria,
+                    data: meses.map(mes => gastosPorMesCategoria[mes][categoria]),
+                    borderColor: cores[index],
+                    backgroundColor: cores[index] + '20',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                };
+            });
+            
+            // Formatando labels para exibição (MM/AAAA)
+            const labelsFormatados = meses.map(mes => {
+                const [ano, mesNum] = mes.split('-');
+                return `${mesNum}/${ano}`;
+            });
+            
+            // Destruir gráfico anterior se existir
+            if (graficoLinha) {
+                graficoLinha.destroy();
+            }
+            
+            graficoLinha = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labelsFormatados,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + formatarValor(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: R$ ${formatarValor(value)}`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Área (temporal)
+        function atualizarGraficoArea() {
+            const ctx = document.getElementById('graficoArea').getContext('2d');
+            
+            // Agrupar gastos por mês
+            const gastosPorMes = {};
+            const meses = [];
+            
+            // Inicializar estrutura
+            gastos.forEach(gasto => {
+                const date = new Date(gasto.data);
+                const mesAno = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!meses.includes(mesAno)) {
+                    meses.push(mesAno);
+                }
+                
+                if (!gastosPorMes[mesAno]) {
+                    gastosPorMes[mesAno] = 0;
+                }
+                
+                gastosPorMes[mesAno] += gasto.valor;
+            });
+            
+            // Ordenar meses
+            meses.sort();
+            
+            // Preparar dataset
+            const dados = meses.map(mes => gastosPorMes[mes]);
+            
+            // Formatando labels para exibição (MM/AAAA)
+            const labelsFormatados = meses.map(mes => {
+                const [ano, mesNum] = mes.split('-');
+                return `${mesNum}/${ano}`;
+            });
+            
+            // Destruir gráfico anterior se existir
+            if (graficoArea) {
+                graficoArea.destroy();
+            }
+            
+            graficoArea = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labelsFormatados,
+                    datasets: [{
+                        label: 'Total de Gastos',
+                        data: dados,
+                        borderColor: '#3498db',
+                        backgroundColor: '#3498db40',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + formatarValor(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: R$ ${formatarValor(value)}`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'bottom',
                         }
                     }
                 }
@@ -839,6 +1500,8 @@
             if (gastos.length === 0) {
                 document.getElementById('totalGasto').textContent = 'R$ 0,00';
                 document.getElementById('maiorGasto').textContent = '-';
+                document.getElementById('categoriaPrincipal').textContent = '-';
+                document.getElementById('periodo').textContent = '-';
                 return;
             }
             
@@ -859,6 +1522,46 @@
             }
             
             document.getElementById('maiorGasto').textContent = `${maiorEstado} (R$ ${formatarValor(maiorValor)})`;
+            
+            // Categoria principal
+            const gastosPorCategoria = {
+                'Salário': 0,
+                'Vale Alimentação': 0,
+                'Vale Transporte': 0,
+                'Férias': 0,
+                'Outros': 0
+            };
+            
+            gastos.forEach(gasto => {
+                if (gastosPorCategoria.hasOwnProperty(gasto.categoria)) {
+                    gastosPorCategoria[gasto.categoria] += gasto.valor;
+                } else {
+                    gastosPorCategoria['Outros'] += gasto.valor;
+                }
+            });
+            
+            let categoriaPrincipal = '';
+            let maiorCategoriaValor = 0;
+            
+            for (const [categoria, valor] of Object.entries(gastosPorCategoria)) {
+                if (valor > maiorCategoriaValor) {
+                    maiorCategoriaValor = valor;
+                    categoriaPrincipal = categoria;
+                }
+            }
+            
+            document.getElementById('categoriaPrincipal').textContent = `${categoriaPrincipal} (R$ ${formatarValor(maiorCategoriaValor)})`;
+            
+            // Período
+            const datas = gastos.map(g => new Date(g.data));
+            const dataMin = new Date(Math.min(...datas));
+            const dataMax = new Date(Math.max(...datas));
+            
+            const formatoData = { month: 'long', year: 'numeric' };
+            const dataMinStr = dataMin.toLocaleDateString('pt-BR', formatoData);
+            const dataMaxStr = dataMax.toLocaleDateString('pt-BR', formatoData);
+            
+            document.getElementById('periodo').textContent = `${dataMinStr} - ${dataMaxStr}`;
         }
     </script>
 </body>
